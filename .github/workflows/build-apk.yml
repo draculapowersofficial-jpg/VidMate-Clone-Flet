@@ -36,8 +36,10 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Compile Production APK Package
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
         run: |
-          flet build apk --project pyproject.toml
+          flet build apk --name drac-media --package com.draculap.dracmedia --assets assets main.py
           
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
