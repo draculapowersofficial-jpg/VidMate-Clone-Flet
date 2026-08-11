@@ -1,0 +1,12 @@
+app:
+  name: "VibeStream Portal"
+  package: "com.yourname.vibestream"
+  version: "1.0.0"
+  build_number: 1
+  main_script: "main.py"
+
+android:
+  permissions:
+    - INTERNET
+    - MANAGE_EXTERNAL_STORAGE
+    - WRITE_EXTERNAL_STORAGE
