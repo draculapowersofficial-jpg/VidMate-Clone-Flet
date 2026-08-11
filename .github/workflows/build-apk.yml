@@ -32,10 +32,10 @@ jobs:
 
       - name: Compile Production APK Package
         run: |
-          yes | flet build apk
+          yes | flet build apk main.py
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VidMate-NextGen-App
+          name: VibeStream-Portal-App
           path: build/apk/*.apk
