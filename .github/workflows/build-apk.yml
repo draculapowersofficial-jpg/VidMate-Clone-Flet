@@ -32,10 +32,10 @@ jobs:
 
       - name: Compile Production APK Package
         run: |
-          yes | flet build apk main.py
+          yes | flet build apk main.py --no-android-studio-check
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VibeStream-Portal-App
+          name: drac-media-App
           path: build/apk/*.apk
