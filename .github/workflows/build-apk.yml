@@ -30,9 +30,13 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
+      - name: Pre-configure Flutter Environment
+        run: |
+          yes | flet build apk --help > /dev/null || true
+
       - name: Compile Production APK Package
         run: |
-          yes | flet build apk main.py --no-android-studio-check
+          yes | flet build apk main.py
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
