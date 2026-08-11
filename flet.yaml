@@ -1,13 +1,1 @@
-app:
-  name: "drac-media"
-  package: "com.draculap.dracmedia"
-  version: "1.0.0"
-  build_number: 1
-  main_script: "main.py"
-  assets_dir: "assets"
 
-android:
-  permissions:
-    - INTERNET
-    - MANAGE_EXTERNAL_STORAGE
-    - WRITE_EXTERNAL_STORAGE
