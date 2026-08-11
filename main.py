@@ -8,7 +8,7 @@ except ImportError:
     yt_dlp = None
 
 def main(page: ft.Page):
-    page.title = "VidMate Next-Gen Portal"
+    page.title = "drac-media Portal"
     page.theme_mode = ft.ThemeMode.DARK
     page.scroll = None
     page.padding = 10
@@ -31,7 +31,10 @@ def main(page: ft.Page):
         text_size=14,
         content_padding=12
     )
-    progress_ring = ft.ProgressRing(visible=False, width=20, height=20, stroke_width=2)
+    
+    # Global explicit progress indicator tracker layouts
+    progress_bar = ft.ProgressBar(value=0, visible=False, color=ft.Colors.RED_ACCENT_400, bgcolor=ft.Colors.SURFACE_VARIANT)
+    progress_percent = ft.Text("", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_ACCENT_400)
     
     trending_grid = ft.GridView(expand=1, runs_count=2, max_extent=250, child_aspect_ratio=0.72, spacing=10, run_spacing=10)
     library_list = ft.ListView(expand=1, spacing=8)
@@ -43,12 +46,32 @@ def main(page: ft.Page):
             content=ft.Column([
                 ft.Text("Select Media Quality", size=18, weight=ft.FontWeight.BOLD),
                 ft.Divider(),
-                ft.Text("Fetching available resolutions...", id="loading_msg", italic=True),
+                ft.Text("Scanning stream formats...", id="loading_msg", italic=True),
                 ft.ListView(id="format_list", spacing=5, height=250, expand=True)
             ], tight=True)
         )
     )
     page.overlay.append(quality_bs)
+
+    # --- YT-DLP DOWNLOAD PROGRESS INTERCEPT HOOK ---
+    def ytdl_progress_hook(d):
+        if d['status'] == 'downloading':
+            total = d.get('total_bytes') or d.get('total_bytes_estimate')
+            downloaded = d.get('downloaded_bytes', 0)
+            if total:
+                percent = downloaded / total
+                # Safeguard boundaries to keep Flet structural rendering parameters within bounds [0.0 - 1.0]
+                clamped_percent = max(0.0, min(1.0, percent))
+                
+                progress_bar.value = clamped_percent
+                progress_percent.value = f"{int(clamped_percent * 100)}%"
+                status_text.value = f"Downloading active data segments..."
+                page.update()
+        elif d['status'] == 'finished':
+            progress_bar.value = 1.0
+            progress_percent.value = "100%"
+            status_text.value = "Post-processing and adjusting media containers..."
+            page.update()
 
     # --- ACTION COMPONENT GENERATORS ---
     def make_media_card(title, author, views, duration, thumbnail, video_url):
@@ -64,7 +87,7 @@ def main(page: ft.Page):
                     ft.ElevatedButton(
                         text="Download",
                         icon=ft.Icons.DOWNLOAD_ROUNDED,
-                        icon_color=ft.Colors.GREEN_400,
+                        icon_color=ft.Colors.RED_ACCENT_400,
                         style=ft.ButtonStyle(padding=5, shape=ft.RoundedRectangleBorder(radius=6)),
                         on_click=lambda e: open_quality_picker(video_url)
                     )
@@ -86,7 +109,7 @@ def main(page: ft.Page):
                 full_path = os.path.join(download_path, f)
                 library_list.controls.append(
                     ft.ListTile(
-                        leading=ft.Icon(ft.Icons.PLAY_CIRCLE_FILLED, color=ft.Colors.AMBER_600),
+                        leading=ft.Icon(ft.Icons.PLAY_CIRCLE_FILLED, color=ft.Colors.RED_ACCENT_400),
                         title=ft.Text(f, size=13, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
                         subtitle=ft.Text("Local Saved Storage File", size=11),
                         on_click=lambda e, p=full_path: page.launch_url(f"file://{p}"),
@@ -97,9 +120,9 @@ def main(page: ft.Page):
 
     # --- QUALITY PICKER LOGIC WORKER ---
     def open_quality_picker(url):
-        # Open empty sheet with loading text immediately
         loading_text = quality_bs.content.content.controls[2]
         format_list_view = quality_bs.content.content.controls[3]
+        
         loading_text.visible = True
         loading_text.value = "Scanning stream formats..."
         format_list_view.controls.clear()
@@ -113,10 +136,9 @@ def main(page: ft.Page):
                     info = ydl.extract_info(url, download=False)
                     formats = info.get('formats', [])
                     
-                    # Track added video resolutions to avoid duplicates in the UI list
                     seen_resolutions = set()
                     
-                    # Always provide an optimized MP3 option at the top
+                    # Native high-fidelity extraction option setup
                     format_list_view.controls.append(
                         ft.ListTile(
                             leading=ft.Icon(ft.Icons.AUDIOTRACK, color=ft.Colors.PURPLE_400),
@@ -126,7 +148,6 @@ def main(page: ft.Page):
                     )
 
                     for f in formats:
-                        # Extract clean standard video resolutions (e.g., 360p, 720p, 1080p)
                         res = f.get('height')
                         ext = f.get('ext')
                         if res and res not in seen_resolutions and ext in ['mp4', 'webm']:
@@ -149,8 +170,10 @@ def main(page: ft.Page):
 
     def trigger_download(url, format_id, is_audio):
         quality_bs.open = False
-        progress_ring.visible = True
-        status_text.value = "Starting customized download task..."
+        progress_bar.visible = True
+        progress_bar.value = 0
+        progress_percent.value = "0%"
+        status_text.value = "Contacting content server nodes..."
         page.update()
 
         def download_worker():
@@ -159,6 +182,7 @@ def main(page: ft.Page):
                     'outtmpl': os.path.join(download_path, '%(title)s.%(ext)s'),
                     'nocheckcertificate': True,
                     'quiet': True,
+                    'progress_hooks': [ytdl_progress_hook] # Direct injection engine connection
                 }
                 if is_audio:
                     opts.update({
@@ -166,16 +190,16 @@ def main(page: ft.Page):
                         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}]
                     })
                 else:
-                    # Request chosen resolution merged automatically with matching audio tracks
                     opts['format'] = f"{format_id}+bestaudio/best"
                 
                 with yt_dlp.YoutubeDL(opts) as ydl:
                     ydl.download([url])
-                status_text.value = "Custom download stored successfully!"
+                status_text.value = "Download completed successfully!"
                 refresh_library()
             except Exception as e:
                 status_text.value = f"Download error: {str(e)[:40]}"
-            progress_ring.visible = False
+            progress_bar.visible = False
+            progress_percent.value = ""
             page.update()
 
         threading.Thread(target=download_worker, daemon=True).start()
@@ -183,8 +207,9 @@ def main(page: ft.Page):
     # --- CORE EXTRACTION ENGINE BACKGROUND THREADS ---
     def fetch_trends_worker():
         if yt_dlp is None: return
-        progress_ring.visible = True
-        status_text.value = "Fetching YouTube global trends..."
+        progress_bar.visible = True
+        progress_bar.value = None # Shows moving scanning loop initialization accent
+        status_text.value = "Fetching global trends..."
         page.update()
         
         trending_grid.controls.clear()
@@ -192,20 +217,3 @@ def main(page: ft.Page):
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 result = ydl.extract_info("ytsearchdate20:trending music gaming", download=False)
-                if 'entries' in result:
-                    for entry in result['entries']:
-                        if not entry: continue
-                        v_id = entry.get('id', '')
-                        title = entry.get('title', 'Unknown Title')
-                        author = entry.get('uploader', 'Unknown Creator')
-                        duration = f"{int(entry.get('duration', 0)) // 60}m" if entry.get('duration') else "Live"
-                        view_count = f"{entry.get('view_count', 0):,}" if entry.get('view_count') else "N/A"
-                        thumb = f"https://youtube.com{v_id}/mqdefault.jpg" if v_id else "https://placehold.co"
-                        v_url = f"https://youtube.com{v_id}"
-                        
-                        trending_grid.controls.append(
-                            make_media_card(title, author, view_count, duration, thumb, v_url)
-                        )
-            status_text.value = "Trends parsed successfully."
-        except Exception as e:
-            status_text.value = f"Failed to pull trends: {str(e)[:40]}"
