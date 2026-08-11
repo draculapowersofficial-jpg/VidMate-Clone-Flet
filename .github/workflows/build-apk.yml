@@ -37,7 +37,7 @@ jobs:
 
       - name: Compile Production APK Package
         run: |
-          flet build apk
+          flet build apk --project pyproject.toml
           
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
