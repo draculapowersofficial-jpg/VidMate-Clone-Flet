@@ -1,5 +1,1 @@
-[tool.flet]
-app_name = "drac-media"
-package_name = "com.draculap.dracmedia"
-main_script = "main.py"
-assets_dir = "assets"
+
