@@ -25,7 +25,6 @@ jobs:
       - name: Install Latest Python Compiling Tools
         run: |
           pip install --upgrade pip
-          # Forcing the server to get the latest version removes old tool errors
           pip install --upgrade flet yt-dlp
 
       - name: Pre-Install Native Flutter SDK
@@ -42,9 +41,9 @@ jobs:
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
           
-          # Clean execution command that grabs project configurations automatically out of flet.yaml
-          flet build apk
-
+          # This flag tells Flet to bypass the doctor test and go straight to compiling
+          flet build apk --skip-flutter-doctor
+          
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
