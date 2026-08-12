@@ -1,1 +1,7 @@
-
+app:
+  name: "drac-media"
+  package: "com.draculap.dracmedia"
+  version: "1.0.0"
+  build_number: 1
+  main_script: "main.py"
+  assets_dir: "assets"
