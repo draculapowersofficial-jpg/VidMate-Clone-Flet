@@ -35,20 +35,17 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Build Isolated Android Binary Package
+      - name: Build Standalone Android Package
         run: |
-          # 1. Links Android tools to global path registries cleanly
+          # Links compiler paths directly inside the global machine environment variables
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
           
-          # 2. Creates an explicit dedicated workspace sub-folder for Flet output
-          mkdir -p output_workspace
-          
-          # 3. Compiles the package through an isolated path matrix to guarantee success
-          flet build apk --name "drac-media" --package "com.draculap.dracmedia" --assets assets --output output_workspace main.py
+          # Clean execution command that grabs project configurations automatically out of flet.yaml
+          flet build apk
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: output_workspace/*.apk
+          path: build/apk/*.apk
