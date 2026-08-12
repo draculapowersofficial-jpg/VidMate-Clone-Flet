@@ -1,54 +1,28 @@
-name: Build Android APK
+name: Prepare Branded App Source
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  package:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
 
-      - name: Set Up Java Environment
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set Up Python Runtime
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Latest Python Compiling Tools
+      - name: Bundle Code and Branding Assets
         run: |
-          pip install --upgrade pip
-          pip install --upgrade flet yt-dlp
-
-      - name: Pre-Install Native Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Initialize Android SDK Manager
-        uses: android-actions/setup-android@v3
-
-      - name: Build Standalone Android Package
-        env:
-          FLET_CI: true
-          FLET_PLATFORM: android
-        run: |
-          # Links compiler paths directly inside the global machine environment variables
-          flutter config --android-sdk "$ANDROID_HOME"
-          yes | sdkmanager --licenses || true
+          # Create a structured deployment directory
+          mkdir -p drac_media_source
           
-          # Build command utilizing CI flag configurations
-          flet build apk --skip-flutter-doctor
-          
-      - name: Upload Finished APK Artifact
+          # Copy your custom code and preferred branding files cleanly inside it
+          cp main.py drac_media_source/
+          if [ -f "flet.yaml" ]; then cp flet.yaml drac_media_source/; fi
+          if [ -d "assets" ]; then cp -r assets drac_media_source/; fi
+
+      - name: Upload Clean Source Package
         uses: actions/upload-artifact@v4
         with:
-          name: drac-media-App
-          path: build/apk/*.apk
+          name: drac-media-SourceBundle
+          path: drac_media_source/
