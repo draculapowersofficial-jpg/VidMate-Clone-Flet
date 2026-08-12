@@ -42,20 +42,24 @@ jobs:
           yes | sdkmanager --licenses || true
 
       - name: Bootstrap and Build Standalone APK
-        env:
-          FLET_PLATFORM: android
         run: |
-          # 1. Instruct Flet to cleanly unpack the Flutter project layout template natively
-          flet build apk --unpacked
+          # 1. Create a native Flutter mobile application skeleton folder cleanly
+          flutter create --org com.draculap --project-name drac_media workspace_app
           
-          # 2. Change directory into the newly extracted workspace folder where pubspec.yaml lives
-          cd build/apk
+          # 2. Open up its package settings file and inject Flet configurations
+          cd workspace_app
+          echo "  flet:" >> pubspec.yaml
           
-          # 3. Direct compilation using Flutter's native, bulletproof compilation system
+          # 3. Create the python assets repository paths inside the mobile structure
+          mkdir -p assets/app
+          cp ../main.py assets/app/main.py
+          if [ -d "../assets" ]; then cp -r ../assets/* assets/app/ || true; fi
+          
+          # 4. Direct native compilation that skips the broken flet-cli wrapper entirely
           flutter build apk --release
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/apk/build/app/outputs/flutter-apk/*-release.apk
+          path: workspace_app/build/app/outputs/flutter-apk/*-release.apk
