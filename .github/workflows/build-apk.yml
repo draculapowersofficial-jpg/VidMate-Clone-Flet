@@ -37,8 +37,12 @@ jobs:
 
       - name: Bootstrap Mobile App Template
         run: |
-          # This extracts the correct mobile directory structures and creates pubspec.yaml automatically
-          flet build template apk --name drac-media --package com.draculap.dracmedia
+          # Creates a completely fresh mobile boilerplate workspace inside a workspace folder
+          flet create --template app workspace_dir
+          
+          # Copy your custom main.py and your asset images directly into the active compilation folder
+          cp main.py workspace_dir/main.py
+          if [ -d "assets" ]; then cp -r assets workspace_dir/; fi
 
       - name: Pre-Configure Native Tool Channels
         run: |
@@ -48,11 +52,12 @@ jobs:
 
       - name: Compile Native Production APK Package
         run: |
-          # Moves into the generated template directory to run the compiler safely
+          # Change directory into the working mobile workspace to compile cleanly where pubspec.yaml lives
+          cd workspace_dir
           flutter build apk --release
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/app/outputs/flutter-apk/*-release.apk
+          path: workspace_dir/build/app/outputs/flutter-apk/*-release.apk
