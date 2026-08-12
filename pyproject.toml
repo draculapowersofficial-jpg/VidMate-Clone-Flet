@@ -1,1 +1,15 @@
+[project]
+name = "drac-media"
+version = "1.0.0"
+description = "Custom Portal App"
+requires-python = ">=3.11"
+dependencies = [
+    "flet>=0.26.0",
+    "yt-dlp>=2025.1.1"
+]
 
+[tool.flet]
+app_name = "drac-media"
+package_name = "com.draculap.dracmedia"
+main_script = "main.py"
+assets_dir = "assets"
