@@ -25,7 +25,7 @@ jobs:
       - name: Install Python Compiling Requirements
         run: |
           pip install --upgrade pip
-          pip install "flet[cli]" yt-dlp
+          pip install flet yt-dlp
 
       - name: Pre-Install Native Flutter SDK
         uses: subosito/flutter-action@v2
@@ -35,29 +35,14 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Bootstrap Mobile App Template
+      - name: Compile Production APK Package
         run: |
-          # Creates a completely fresh mobile boilerplate workspace inside a workspace folder
-          flet create --template app workspace_dir
+          # We use a clean build path flag instructing the wrapper tool to compile headlessly 
+          # without tripping over missing project dependencies.
+          flet build apk --no-android-studio-check --no-public-signing-key
           
-          # Copy your custom main.py and your asset images directly into the active compilation folder
-          cp main.py workspace_dir/main.py
-          if [ -d "assets" ]; then cp -r assets workspace_dir/; fi
-
-      - name: Pre-Configure Native Tool Channels
-        run: |
-          flutter config --no-analytics
-          flutter config --android-sdk "$ANDROID_HOME"
-          yes | sdkmanager --licenses || true
-
-      - name: Compile Native Production APK Package
-        run: |
-          # Change directory into the working mobile workspace to compile cleanly where pubspec.yaml lives
-          cd workspace_dir
-          flutter build apk --release
-
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: workspace_dir/build/app/outputs/flutter-apk/*-release.apk
+          path: build/apk/*.apk
