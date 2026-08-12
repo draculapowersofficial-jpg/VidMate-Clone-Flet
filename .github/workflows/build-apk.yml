@@ -43,19 +43,24 @@ jobs:
 
       - name: Bootstrap and Build Standalone APK
         run: |
-          # 1. Create a native Flutter mobile application skeleton folder cleanly
+          # 1. Create a clean native Flutter workspace skeleton folder
           flutter create --org com.draculap --project-name drac_media workspace_app
           
-          # 2. Open up its package settings file and inject Flet configurations
+          # 2. Inject the official flet engine dependency package into configuration layout
           cd workspace_app
-          echo "  flet:" >> pubspec.yaml
+          flutter pub add flet
           
-          # 3. Create the python assets repository paths inside the mobile structure
-          mkdir -p assets/app
-          cp ../main.py assets/app/main.py
-          if [ -d "../assets" ]; then cp -r ../assets/* assets/app/ || true; fi
+          # 3. Structural mapping adjustments to match flet python packaging rules
+          mkdir -p assets
+          cp ../main.py assets/main.py
+          if [ -d "../assets" ]; then cp -r ../assets/* assets/ || true; fi
           
-          # 4. Direct native compilation that skips the broken flet-cli wrapper entirely
+          # 4. Clear out formatting blocks to register custom asset directory tracks
+          echo "flutter:" >> pubspec.yaml
+          echo "  assets:" >> pubspec.yaml
+          echo "    - assets/" >> pubspec.yaml
+          
+          # 5. Native compilation pipeline execution
           flutter build apk --release
 
       - name: Upload Finished APK Artifact
