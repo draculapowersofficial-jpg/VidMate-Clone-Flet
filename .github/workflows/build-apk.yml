@@ -25,7 +25,7 @@ jobs:
       - name: Install Python Compiling Tools
         run: |
           pip install --upgrade pip
-          pip install "flet[cli]" yt-dlp
+          pip install flet yt-dlp
 
       - name: Pre-Install Native Flutter SDK
         uses: subosito/flutter-action@v2
@@ -35,17 +35,30 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Build Standalone Android Package
+      - name: Pre-Configure Native Tool Channels
         run: |
-          # Links compiler paths directly inside the global machine environment variables
+          flutter config --no-analytics
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
+
+      - name: Bootstrap and Build Standalone APK
+        env:
+          FLET_PLATFORM: android
+        run: |
+          # 1. Create a clean flet mobile build workspace layout out of your files
+          flet create --template app workspace_app
           
-          # Added flag to force Flet to bypass headless environment health checks
-          flet build apk --no-android-studio-check
+          # 2. Copy your main application, configurations, and branding assets inside it
+          cp main.py workspace_app/
+          if [ -f "flet.yaml" ]; then cp flet.yaml workspace_app/; fi
+          if [ -d "assets" ]; then cp -r assets workspace_app/; fi
+          
+          # 3. Direct compilation inside the active mobile workspace directory
+          cd workspace_app
+          flutter build apk --release
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/apk/*.apk
+          path: workspace_app/build/app/outputs/flutter-apk/*-release.apk
