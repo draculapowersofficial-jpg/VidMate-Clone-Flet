@@ -41,8 +41,8 @@ jobs:
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
           
-          # Clean execution command that grabs project configurations automatically out of flet.yaml
-          flet build apk
+          # Added flag to force Flet to bypass headless environment health checks
+          flet build apk --no-android-studio-check
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
