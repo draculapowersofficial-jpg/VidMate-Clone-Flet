@@ -22,10 +22,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python Compiling Tools
+      - name: Install Latest Python Compiling Tools
         run: |
           pip install --upgrade pip
-          pip install flet yt-dlp
+          # Forcing the server to get the latest version removes old tool errors
+          pip install --upgrade flet yt-dlp
 
       - name: Pre-Install Native Flutter SDK
         uses: subosito/flutter-action@v2
@@ -35,36 +36,17 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Pre-Configure Native Tool Channels
+      - name: Build Standalone Android Package
         run: |
-          flutter config --no-analytics
+          # Links compiler paths directly inside the global machine environment variables
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
-
-      - name: Bootstrap and Build Standalone APK
-        run: |
-          # 1. Create a clean native Flutter workspace skeleton folder
-          flutter create --org com.draculap --project-name drac_media workspace_app
           
-          # 2. Inject the official flet engine dependency package into configuration layout
-          cd workspace_app
-          flutter pub add flet
-          
-          # 3. Structural mapping adjustments to match flet python packaging rules
-          mkdir -p assets
-          cp ../main.py assets/main.py
-          if [ -d "../assets" ]; then cp -r ../assets/* assets/ || true; fi
-          
-          # 4. Clear out formatting blocks to register custom asset directory tracks
-          echo "flutter:" >> pubspec.yaml
-          echo "  assets:" >> pubspec.yaml
-          echo "    - assets/" >> pubspec.yaml
-          
-          # 5. Native compilation pipeline execution
-          flutter build apk --release
+          # Clean execution command that grabs project configurations automatically out of flet.yaml
+          flet build apk
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: workspace_app/build/app/outputs/flutter-apk/*-release.apk
+          path: build/apk/*.apk
