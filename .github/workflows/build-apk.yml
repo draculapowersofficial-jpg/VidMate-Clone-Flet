@@ -22,6 +22,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Python Compiling Tools
+        run: |
+          pip install --upgrade pip
+          pip install "flet[cli]" yt-dlp
+
       - name: Pre-Install Native Flutter SDK
         uses: subosito/flutter-action@v2
         with:
@@ -30,14 +35,20 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Compile Production APK Package
-        uses: flet-dev/flet-build-action@v1
-        with:
-          target: apk
-          working-directory: '.'
+      - name: Build Isolated Android Binary Package
+        run: |
+          # 1. Links Android tools to global path registries cleanly
+          flutter config --android-sdk "$ANDROID_HOME"
+          yes | sdkmanager --licenses || true
+          
+          # 2. Creates an explicit dedicated workspace sub-folder for Flet output
+          mkdir -p output_workspace
+          
+          # 3. Compiles the package through an isolated path matrix to guarantee success
+          flet build apk --name "drac-media" --package "com.draculap.dracmedia" --assets assets --output output_workspace main.py
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/apk/*.apk
+          path: output_workspace/*.apk
