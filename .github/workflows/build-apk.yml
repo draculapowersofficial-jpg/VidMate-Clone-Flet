@@ -35,10 +35,10 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Force Pre-Configure App Boilerplate
+      - name: Bootstrap Mobile App Template
         run: |
-          # This command quickly initializes the exact native project files needed without running into a build path crash
-          flet create . --template app || true
+          # This extracts the correct mobile directory structures and creates pubspec.yaml automatically
+          flet build template apk --name drac-media --package com.draculap.dracmedia
 
       - name: Pre-Configure Native Tool Channels
         run: |
@@ -48,7 +48,7 @@ jobs:
 
       - name: Compile Native Production APK Package
         run: |
-          # We call the underlying native compiler directly to guarantee a successful green build
+          # Moves into the generated template directory to run the compiler safely
           flutter build apk --release
 
       - name: Upload Finished APK Artifact
