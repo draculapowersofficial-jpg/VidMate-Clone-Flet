@@ -35,18 +35,15 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Auto-Accept Android SDK Licenses
+      - name: Pre-Configure Isolated Tool Features
         run: |
+          flutter config --no-analytics
+          flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
 
       - name: Compile Production APK Package
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
         run: |
-          # Manually force Flutter to see the exact runner Android SDK installation path layout
-          flutter config --android-sdk "$ANDROID_HOME"
-          flet build apk
+          flet build apk --target=android
           
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
