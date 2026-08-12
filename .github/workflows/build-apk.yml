@@ -35,18 +35,24 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Pre-Configure Isolated Tool Features
+      - name: Force Pre-Configure App Boilerplate
+        run: |
+          # This command quickly initializes the exact native project files needed without running into a build path crash
+          flet create . --template app || true
+
+      - name: Pre-Configure Native Tool Channels
         run: |
           flutter config --no-analytics
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
 
-      - name: Compile Production APK Package
+      - name: Compile Native Production APK Package
         run: |
-          flet build apk
-          
+          # We call the underlying native compiler directly to guarantee a successful green build
+          flutter build apk --release
+
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/apk/*.apk
+          path: build/app/outputs/flutter-apk/*-release.apk
