@@ -37,17 +37,17 @@ jobs:
 
       - name: Link SDK Paths Natively
         run: |
-          # Links Java and Android SDK installation references directly inside the Flutter global workspace
           flutter config --android-sdk "$ANDROID_HOME"
           flutter config --jdk-dir "$JAVA_HOME"
           yes | sdkmanager --licenses || true
 
       - name: Compile Production APK Package
         run: |
-          flet build apk
-          
+          # Use flet pack to cleanly compile your scripts and graphics natively
+          flet pack main.py --assets assets
+
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/apk/*.apk
+          path: dist/*.apk
