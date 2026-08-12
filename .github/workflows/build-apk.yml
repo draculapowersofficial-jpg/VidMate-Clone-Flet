@@ -22,10 +22,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python Compiling Requirements
+      - name: Install Python Dependencies
         run: |
           pip install --upgrade pip
-          pip install "flet[cli]" yt-dlp
+          pip install flet yt-dlp
 
       - name: Pre-Install Native Flutter SDK
         uses: subosito/flutter-action@v2
@@ -35,19 +35,14 @@ jobs:
       - name: Initialize Android SDK Manager
         uses: android-actions/setup-android@v3
 
-      - name: Link SDK Paths Natively
-        run: |
-          flutter config --android-sdk "$ANDROID_HOME"
-          flutter config --jdk-dir "$JAVA_HOME"
-          yes | sdkmanager --licenses || true
-
       - name: Compile Production APK Package
-        run: |
-          # Use flet pack to cleanly compile your scripts and graphics natively
-          flet pack main.py --assets assets
+        uses: flet-dev/flet-build-action@v1
+        with:
+          target: apk
+          project_dir: '.'
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: dist/*.apk
+          path: build/apk/*.apk
