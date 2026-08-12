@@ -45,19 +45,17 @@ jobs:
         env:
           FLET_PLATFORM: android
         run: |
-          # 1. This special build command forces Flet to generate the real pubspec.yaml and mobile folders
-          flet build template apk --name drac-media --package com.draculap.dracmedia
+          # 1. Instruct Flet to cleanly unpack the Flutter project layout template natively
+          flet build apk --unpacked
           
-          # 2. Merge your personal assets and custom code into the active source code directories
-          if [ -d "assets" ]; then cp -r assets/* build/app/assets/ || true; fi
-          cp main.py build/app/main.py || cp main.py build/app/lib/main.py || true
+          # 2. Change directory into the newly extracted workspace folder where pubspec.yaml lives
+          cd build/apk
           
-          # 3. Direct compilation inside the generated mobile workspace directory
-          cd build/app
+          # 3. Direct compilation using Flutter's native, bulletproof compilation system
           flutter build apk --release
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: build/app/build/app/outputs/flutter-apk/*-release.apk
+          path: build/apk/build/app/outputs/flutter-apk/*-release.apk
