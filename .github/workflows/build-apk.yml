@@ -22,11 +22,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python Dependencies
-        run: |
-          pip install --upgrade pip
-          pip install flet yt-dlp
-
       - name: Pre-Install Native Flutter SDK
         uses: subosito/flutter-action@v2
         with:
