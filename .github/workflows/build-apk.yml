@@ -36,12 +36,15 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build Standalone Android Package
+        env:
+          FLET_CI: true
+          FLET_PLATFORM: android
         run: |
           # Links compiler paths directly inside the global machine environment variables
           flutter config --android-sdk "$ANDROID_HOME"
           yes | sdkmanager --licenses || true
           
-          # This flag tells Flet to bypass the doctor test and go straight to compiling
+          # Build command utilizing CI flag configurations
           flet build apk --skip-flutter-doctor
           
       - name: Upload Finished APK Artifact
