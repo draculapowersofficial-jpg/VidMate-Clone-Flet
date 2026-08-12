@@ -45,20 +45,19 @@ jobs:
         env:
           FLET_PLATFORM: android
         run: |
-          # 1. Create a clean flet mobile build workspace layout out of your files
-          flet create --template app workspace_app
+          # 1. This special build command forces Flet to generate the real pubspec.yaml and mobile folders
+          flet build template apk --name drac-media --package com.draculap.dracmedia
           
-          # 2. Copy your main application, configurations, and branding assets inside it
-          cp main.py workspace_app/
-          if [ -f "flet.yaml" ]; then cp flet.yaml workspace_app/; fi
-          if [ -d "assets" ]; then cp -r assets workspace_app/; fi
+          # 2. Merge your personal assets and custom code into the active source code directories
+          if [ -d "assets" ]; then cp -r assets/* build/app/assets/ || true; fi
+          cp main.py build/app/main.py || cp main.py build/app/lib/main.py || true
           
-          # 3. Direct compilation inside the active mobile workspace directory
-          cd workspace_app
+          # 3. Direct compilation inside the generated mobile workspace directory
+          cd build/app
           flutter build apk --release
 
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drac-media-App
-          path: workspace_app/build/app/outputs/flutter-apk/*-release.apk
+          path: build/app/build/app/outputs/flutter-apk/*-release.apk
